@@ -1,0 +1,13 @@
+# 本项目直接依赖（开发环境：Python 3.11）
+
+# 调用 OpenAI 兼容接口（DeepSeek、OpenAI 等）
+openai>=1.0.0
+
+# 从 .env 文件加载环境变量
+python-dotenv>=1.0.0
+
+# 访问 wttr.in 天气接口
+requests>=2.31.0
+
+# Tavily 联网搜索，用于查询旅游景点推荐
+tavily-python>=0.3.0

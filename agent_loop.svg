@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 620" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4B6BFB"/>
+    </marker>
+  </defs>
+
+  <!-- ① 用户提问 -->
+  <rect x="290" y="20" width="300" height="56" rx="10" fill="#EEF2FF" stroke="#4B6BFB" stroke-width="1.5"/>
+  <text x="440" y="43" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">① 用户提问</text>
+  <text x="440" y="64" text-anchor="middle" font-size="13" fill="#4B5563">例如：西安今天天气怎么样，适合去哪些景点？</text>
+  <path d="M440,76 L440,104" stroke="#4B6BFB" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ② LLM 推理 -->
+  <rect x="250" y="106" width="380" height="88" rx="10" fill="#E0E7FF" stroke="#4B6BFB" stroke-width="1.5"/>
+  <text x="440" y="131" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">② LLM 推理（Thought + Action）</text>
+  <text x="440" y="154" text-anchor="middle" font-size="13" fill="#374151">system_prompt + 对话历史 · model=gpt-4o-mini</text>
+  <text x="440" y="176" text-anchor="middle" font-size="13" fill="#6B7280">temperature=0，保证输出格式稳定</text>
+  <path d="M440,194 L440,222" stroke="#4B6BFB" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ③ 解析 Action -->
+  <rect x="290" y="224" width="300" height="56" rx="10" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="440" y="247" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">③ 解析 Action</text>
+  <text x="440" y="268" text-anchor="middle" font-size="13" fill="#6B7280">function_name(参数="值") 或 Finish[答案]</text>
+
+  <!-- 分支 -->
+  <path d="M440,280 L440,302 L240,302 L240,332" stroke="#F97316" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="246" y="296" font-size="12.5" fill="#C2410C">Action 为调用工具</text>
+  <path d="M440,280 L440,302 L640,302 L640,332" stroke="#22C55E" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="634" y="296" text-anchor="end" font-size="12.5" fill="#15803D">Action 为 Finish</text>
+
+  <!-- ④ 工具执行 -->
+  <rect x="90" y="334" width="300" height="118" rx="10" fill="#FFEDD5" stroke="#F97316" stroke-width="1.5"/>
+  <text x="240" y="359" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">④ 调用工具执行</text>
+  <text x="240" y="385" text-anchor="middle" font-size="13.5" fill="#374151">get_weather(city)</text>
+  <text x="240" y="407" text-anchor="middle" font-size="13.5" fill="#374151">get_attraction(city, weather)</text>
+  <text x="240" y="434" text-anchor="middle" font-size="13" fill="#6B7280">返回自然语言格式的结果</text>
+  <path d="M240,452 L240,488" stroke="#4B6BFB" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ⑤ 最终回答 -->
+  <rect x="560" y="334" width="200" height="118" rx="10" fill="#DCFCE7" stroke="#22C55E" stroke-width="1.5"/>
+  <text x="660" y="362" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">⑤ Finish[最终答案]</text>
+  <text x="660" y="394" text-anchor="middle" font-size="13.5" fill="#374151">输出最终回答</text>
+  <text x="660" y="416" text-anchor="middle" font-size="13.5" fill="#374151">任务结束</text>
+
+  <!-- ⑥ 结果回填 -->
+  <rect x="90" y="490" width="300" height="70" rx="10" fill="#F1F5F9" stroke="#64748B" stroke-width="1.5"/>
+  <text x="240" y="515" text-anchor="middle" font-size="15" font-weight="700" fill="#1F2937">⑥ 工具结果回填对话历史</text>
+  <text x="240" y="540" text-anchor="middle" font-size="13" fill="#6B7280">作为 user 消息，交给 LLM 继续推理</text>
+
+  <!-- 循环箭头 -->
+  <path d="M390,525 L700,525 L700,150 L642,150" fill="none" stroke="#4B6BFB" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="708" y="468" font-size="13" fill="#374151">循环继续推理</text>
+  <text x="708" y="490" font-size="12.5" fill="#6B7280">（最多 10 轮）</text>
+
+  <text x="440" y="602" text-anchor="middle" font-size="12.5" fill="#9CA3AF">示意：智能体 ReAct 循环（Thought → Action → 工具结果 → 循环 / Finish）</text>
+</svg>
