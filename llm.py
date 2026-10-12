@@ -2,8 +2,8 @@ from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 import re
 import os
-from prompts import AGENT_SYSTEM_PROMPT
-from tools import available_tools
+from prompts import AGENT_SYSTEM_PROMPT ,REFLECTION_BLOCK ,user_prompt
+from tools import available_tools, extract_preferences ,MEMORY, EXCLUDED, MAX_ALTERNATIVES ,REJECT_COUNT, REJECTED_LIST, reset_reject_count
 from dotenv import load_dotenv
 
 
@@ -41,13 +41,31 @@ llm = OpenAICompatibleClient(
     base_url = os.environ["OPENAI_BASE_URL"]
 )
 
-user_prompt = "你好，请帮我查询⼀下今天西安的天⽓，然后根据天⽓推荐⼀个合适的旅游景点。"
+# user_prompt = "你好，请帮我查询⼀下今天西安的天⽓，然后根据天⽓推荐⼀个合适的旅游景点。"
 prompt_history = [f"用户请求：{user_prompt}"]
 
-for i in range(5):
+# 循环前：从用户请求启发式提取偏好，写入记忆
+for _key, _value in extract_preferences(user_prompt):
+    MEMORY[_key] = _value
+    print(f"[记忆]提取偏好：{_key} -> {_value}")
+
+for i in range(10):    # 原为 range(5)，查票+备选需要更多轮
     print(f"---循环{i+1}---\n")
 
+    # ③ 连续拒绝反思：>=3 时在 Thought 之前注入反思指令
+    if REJECT_COUNT >= 3:
+        reflection_prompt = REFLECTION_BLOCK.format(rejected="、".join(REJECTED_LIST))
+        prompt_history.append(reflection_prompt)
+        reset_reject_count()     # 反思指令已注入，清零计数（黑名单与记忆保留）
+        print(f"已触发连续拒绝反思，注入反思指令：\n{reflection_prompt}\n")
+    # ① 记忆/状态注入：每轮重建，不写入历史（避免上下文膨胀与截断丢失）
+    ctx = "；".join([f"{k}:{v}" for k,v in MEMORY.items()]) if MEMORY else ""
+    if EXCLUDED:
+        ctx += f"；已售罄，排除景点：{'、'.join(EXCLUDED)}"
     full_prompt = "\n".join(prompt_history)
+    if ctx:
+        full_prompt = f"【当前状态】{ctx}\n\n" + full_prompt
+    print(f"本轮完整Prompt：\n{full_prompt}\n")
 
     llm_output = llm.generate(full_prompt,system_prompt=AGENT_SYSTEM_PROMPT)
 
@@ -98,7 +116,14 @@ for i in range(5):
         observation = available_tools[tool_name](**kwargs)
     else:
         observation = f"错误:未定义工具'{tool_name}'"
-    
+
+    # ② 售罄兜底：Observation 后处理（工具层已自动拉黑，这里补提示）
+    if "售罄" in observation:
+        if len(EXCLUDED) >= MAX_ALTERNATIVES:
+            observation += f"；已排除{len(EXCLUDED)}个景点，达到最大备选数{MAX_ALTERNATIVES}，请调整推荐策略,不在继续推荐同类。"
+        else:
+            observation += "；已将该景点加入排除列表，后续推荐将避开。"
+
     observation_str = f"Observation: {observation}"
-    print(f"{observation_str}\n" + "="*40)
+    print(f"{observation_str}\n" + "=" * 40)
     prompt_history.append(observation_str)
